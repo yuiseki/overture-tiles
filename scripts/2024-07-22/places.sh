@@ -9,7 +9,7 @@ load spatial;
 COPY ( 
     SELECT
         'Feature' AS type,
-        json(st_asgeojson(st_geomfromwkb(geometry))) AS geometry,
+        ST_AsGeoJSON(geometry) AS geometry,
         json_object(
             'id', id,
             '@name', json_extract_string(names, '$.primary'),
