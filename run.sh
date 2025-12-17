@@ -1,35 +1,43 @@
+#!/usr/bin/env bash
+
 set -e
 set -u
-set -x
 
-# Automation script for running inside Docker on AWS Batch.
+# Required environment variables
+INPUT="${INPUT:?Error: INPUT environment variable is required}"
+OUTPUT="${OUTPUT:?Error: OUTPUT environment variable is required}"
+THEME="${THEME:?Error: THEME environment variable is required}"
 
-RELEASE_DATA=$1
-BUCKET=$2
-THEME=$3
+# Optional environment variables
+CUSTOM_PROFILE="${CUSTOM_PROFILE:-}"
+CUSTOM_SCRIPT="${CUSTOM_SCRIPT:-}"
+SKIP_UPLOAD="${SKIP_UPLOAD:-false}"
 
-# The most recent major version used in the /scripts directory
-SCRIPTS_VERSION="2024-07-22"
+# TODO: Implement custom profile/script support later
+if [ -n "$CUSTOM_PROFILE" ] || [ -n "$CUSTOM_SCRIPT" ]; then
+  # Should download custom profile/script and use it. Currently not implemented.
+  echo "Error: Custom profile/script support not yet implemented"
+  exit 1
+fi
 
-# Trim the patch version: 2024-06-13-beta.1 -> 2024-06-13-beta
-RELEASE_TILESET="${RELEASE_DATA%%.*}"
+# Download input data from S3
+if [ -n "${BBOX:-}" ]; then
+  echo "Downloading using bbox..."
+  bash "$(dirname "$0")/bbox.sh" "$INPUT" "$BBOX" "$THEME" /data
+else
+  aws s3 sync --no-progress --region us-west-2 --no-sign-request "$INPUT/theme=$THEME" /data/theme=$THEME
+fi
 
-# Download the full theme to /data.
-aws s3 sync --no-progress --region us-west-2 --no-sign-request s3://overturemaps-us-west-2/release/$RELEASE_DATA/theme=$THEME /data/theme=$THEME
-
-# Tile and upload the theme to the target bucket.
-if [ "$THEME" == "admins" ] || [ "$THEME" == "places" ] || [ "$THEME" == "divisions" ]; then
-  # Target a specific set of release scripts for generating tiles
-  if test -d scripts/$RELEASE_TILESET/$THEME.sh; then
-    bash scripts/$RELEASE_TILESET/$THEME.sh /data $THEME.pmtiles
-  # Generate tiles using the latest release scripts
-  else
-    bash scripts/$SCRIPTS_VERSION/$THEME.sh /data $THEME.pmtiles
+# Generate tiles based on theme
+if [ "$THEME" == "places" ] || [ "$THEME" == "divisions" ]; then
+  bash /scripts/${THEME}.sh /data $THEME.pmtiles
+  if [ "$SKIP_UPLOAD" != "true" ]; then
+    aws s3 cp --no-progress $THEME.pmtiles "$OUTPUT"
   fi
-
-  aws s3 cp --no-progress $THEME.pmtiles s3://$BUCKET/$RELEASE_TILESET/$THEME.pmtiles
 else
   className="${THEME^}"
   java -cp planetiler.jar /profiles/$className.java --data=/data
-  aws s3 cp --no-progress /data/$THEME.pmtiles s3://$BUCKET/$RELEASE_TILESET/$THEME.pmtiles
+  if [ "$SKIP_UPLOAD" != "true" ]; then
+    aws s3 cp --no-progress /data/$THEME.pmtiles "$OUTPUT"
+  fi
 fi
