@@ -15,7 +15,7 @@ The repository is organized into the following main components:
 ## Architecture
 The tile generation pipeline follows a three-stage process:
 
-1. **Download**: Fetches Overture Maps data from the official S3 release (specified via `RELEASE` environment variable). Optionally supports geographic filtering using bounding boxes (`BBOX` environment variable) for testing or smaller regional extracts.
+1. **Download**: Fetches Overture Maps data from the official S3 release (specified via `RELEASE` environment variable) or a custom S3 source (via `SOURCE_OVERRIDE` for internal testing). When using `RELEASE`, optionally supports geographic filtering using bounding boxes (`BBOX` environment variable) for smaller regional extracts.
 
 2. **Transform**: Processes the downloaded data into PMTiles format using theme-specific profiles and scripts (see Profiles and Scripts section below).
 
@@ -28,10 +28,12 @@ The Docker container accepts the following environment variables:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `RELEASE` | Yes | Overture Maps release version (e.g., `2025-11-19.0`) |
+| `RELEASE` | Yes* | Overture Maps release version (e.g., `2025-11-19.0`). *Required unless `SOURCE_OVERRIDE` is set. |
 | `OUTPUT` | Yes | S3 bucket path for uploading generated PMTiles |
 | `THEME` | Yes | Theme to process (`base`, `transportation`, `buildings`, `addresses`, `places`, or `divisions`) |
-| `BBOX` | No | Bounding box for regional extracts (format: `minLon,minLat,maxLon,maxLat`) |
+| `BBOX` | No | Bounding box for regional extracts (format: `minLon,minLat,maxLon,maxLat`). Only works with `RELEASE`. |
+| `SOURCE_OVERRIDE` | No | Custom S3 path for input data (for internal use). Overrides `RELEASE` if set. |
+| `S3_REGION` | No | S3 region for custom sources (defaults to `us-west-2`) |
 | `SKIP_UPLOAD` | No | Set to `true` to skip S3 upload (useful for local testing) |
 
 ## Profiles and Scripts
