@@ -38,6 +38,12 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "Release version: ${VERSION}"
 
+      - name: Set lowercase repository
+        id: lowercase
+        run: |
+          REPO="${{ github.repository }}"
+          echo "repository=${REPO,,}" >> $GITHUB_OUTPUT
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -45,7 +51,7 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
+            ghcr.io/${{ steps.lowercase.outputs.repository }}:latest
+            ghcr.io/${{ steps.lowercase.outputs.repository }}:${{ steps.version.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
