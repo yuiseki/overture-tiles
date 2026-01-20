@@ -68,8 +68,8 @@ export class OvertureTilesCdkStack extends cdk.Stack {
     );
     distribution.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
 
-    // Use public ECR repository for the overture-tiles image
-    const imageUri = 'public.ecr.aws/y1b4e9z6/overture-tiles:latest';
+    // Use GitHub Container Registry for the overture-tiles image
+    const imageUri = 'ghcr.io/overturemaps/overture-tiles:latest';
 
     const role = new iam.Role(this, `${ID}JobRole`, {
       assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
