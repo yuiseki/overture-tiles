@@ -1,7 +1,7 @@
 #!/usr/bin/env just --justfile
 
 cdk_dir := 'overture-tiles-cdk'
-latest_release := '2025-11-19.0'
+latest_release := `curl -s https://stac.overturemaps.org | jq -r '.links[] | select(.latest == true) | .href | split("/")[1]'`
 overture_bucket := 's3://overturemaps-us-west-2'
 
 @_default:
