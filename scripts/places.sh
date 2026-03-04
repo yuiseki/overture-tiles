@@ -9,7 +9,11 @@ load spatial;
 COPY ( 
     SELECT
         'Feature' AS type,
-        ST_AsGeoJSON(ST_GeomFromWKB(geometry))) AS geometry,
+        CASE 
+            WHEN typeof(geometry) = 'BLOB' 
+            THEN ST_AsGeoJSON(ST_GeomFromWKB(geometry::BLOB))
+            ELSE ST_AsGeoJSON(geometry::GEOMETRY)
+        END AS geometry,
         json_object(
             'id', id,
             '@name', json_extract_string(names, '$.primary'),
