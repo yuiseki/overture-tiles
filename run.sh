@@ -29,8 +29,14 @@ fi
 
 # Download input data from S3
 if [ -n "$SOURCE_OVERRIDE" ]; then
-  echo "Downloading from override source: $SOURCE_OVERRIDE"
-  aws s3 sync --no-progress --region "$S3_REGION" "$SOURCE_OVERRIDE" /data/theme=$THEME
+  if [ -n "${BBOX:-}" ]; then
+    echo "Downloading from override source: $SOURCE_OVERRIDE with bbox filter..."
+    aws s3 sync --no-progress --region "$S3_REGION" "$SOURCE_OVERRIDE" /tmp/overture_source/theme=$THEME
+    bash "$(dirname "$0")/bbox.sh" "" "$BBOX" "$THEME" /data "" "" /tmp/overture_source
+  else
+    echo "Downloading from override source: $SOURCE_OVERRIDE"
+    aws s3 sync --no-progress --region "$S3_REGION" "$SOURCE_OVERRIDE" /data/theme=$THEME
+  fi
 elif [ -n "$RELEASE" ]; then
   # Official Overture release (supports bbox filtering)
   if [ -n "${BBOX:-}" ]; then
