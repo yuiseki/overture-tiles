@@ -60,5 +60,6 @@ else
 fi
 
 if [ "$SKIP_UPLOAD" != "true" ]; then
+  [[ "$OUTPUT" != */ ]] && OUTPUT="${OUTPUT}/"
   aws s3 cp --no-progress /data/$THEME.pmtiles "$OUTPUT"
 fi
