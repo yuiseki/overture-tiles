@@ -16,6 +16,9 @@ RUN curl -L https://awscli.amazonaws.com/awscli-exe-linux-${ARCH}.zip -o awscliv
 # Download planetiler JAR
 RUN curl -L https://github.com/onthegomap/planetiler/releases/download/v0.10.2/planetiler.jar -o planetiler.jar
 
+# Download and install duckdb for bbox.sh filtering of GeoParquet
+RUN curl -L https://github.com/duckdb/duckdb/releases/download/v1.5.1/duckdb_cli-linux-${TARGETARCH}.zip -o duckdb_cli-linux.zip && unzip duckdb_cli-linux.zip -d /usr/local/bin/ && rm duckdb_cli-linux.zip
+
 # Copy profiles
 COPY profiles /profiles
 
