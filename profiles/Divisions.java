@@ -18,7 +18,19 @@ public class Divisions implements OvertureProfile.Theme {
         };
         if (layer.equals("division")) {
             var point = features.point(layer);
+
+            // extract the cartography.prominence value
+            // as the @prominence tag
+            if (source.hasTag("cartography")) {
+                var cartography = source.getStruct("cartography");
+                var prominence = source.getStruct("cartography").get("prominence");
+                point.setSortKeyDescending(prominence.asInt());
+                // depending on the prominence, boost the minzoom higher
+                minzoom = Math.min((int)Math.floor((100.0 - prominence.asDouble()) / 5.0)+1,10);
+                point.setAttr("@prominence", prominence);
+            }
             point.setMinZoom(minzoom);
+
             OvertureProfile.addFullTags(source, point, minzoom);
         } else if (layer.equals("division_boundary")) {
             var line = features.line(layer);
